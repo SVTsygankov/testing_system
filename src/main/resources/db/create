@@ -50,17 +50,42 @@ CREATE INDEX idx_answers_question_id ON answers(question_id);
 CREATE INDEX idx_answers_is_correct ON answers(is_correct);
 
 CREATE TABLE test_results (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    test_id INTEGER REFERENCES tests(id) ON DELETE CASCADE,
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    test_id INTEGER NOT NULL,
     date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- 2. Внешние ключи
+ALTER TABLE test_results
+ADD CONSTRAINT fk_test_results_user_id
+FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+
+ALTER TABLE test_results
+ADD CONSTRAINT fk_test_results_test_id
+FOREIGN KEY (test_id) REFERENCES tests(id) ON DELETE CASCADE;
+
+
+-- Для быстрого поиска результатов пользователя
+CREATE INDEX idx_test_results_user_id ON test_results(user_id);
+
+-- Для фильтрации по тестам
+CREATE INDEX idx_test_results_test_id ON test_results(test_id);
+
+-- Для поиска ответов по результату
+CREATE INDEX idx_result_answers_result_id ON result_answers(result_id);
+
+-- 3. Создаём таблицу ответов
 CREATE TABLE result_answers (
-    id SERIAL PRIMARY KEY,
-    result_id INTEGER REFERENCES test_results(id) ON DELETE CASCADE,
+    id BIGSERIAL PRIMARY KEY,
+    result_id BIGINTEGER NOT NULL,
     asked_question TEXT NOT NULL,
     selected_answer TEXT NOT NULL,
     correct BOOLEAN NOT NULL,
     correct_answer TEXT
 );
+
+    CONSTRAINT fk_result_answers_result_id
+        FOREIGN KEY (result_id) REFERENCES test_results(id) ON DELETE CASCADE
+);
+

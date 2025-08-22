@@ -1,0 +1,274 @@
+/* Общие стили */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f7f7f7;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+}
+
+/* Хедер — фиксированная верхняя панель */
+header {
+    background-color: #343a40;
+    color: white;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+header h1 {
+    margin: 0;
+    flex: 1;
+    text-align: center;
+    font-size: 1.5em;
+}
+
+header .mode-switcher {
+    display: flex;
+    gap: 10px; /* Расстояние между кнопками */
+    margin-left: auto; /* Прижимаем к правому краю */
+    padding: 10px 50px; /* Вертикальные отступы + правый отступ */
+}
+
+/* Кнопки в хедере */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+.btn-admin, .btn-user-mode {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.btn-logout {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-admin:hover, .btn-user-mode:hover {
+    background-color: #138496;
+}
+
+.btn-logout:hover {
+    background-color: #c82333;
+}
+
+/* Иконки */
+.fas {
+    margin-right: 6px;
+}
+
+/* Основной контейнер */
+.container {
+    margin-top: 100px; /* Отступ от фиксированного хедера */
+    padding-bottom: 80px; /* Место под футер */
+    min-height: calc(100vh - 180px);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.form-container {
+    background-color: white;
+    padding: 25px 30px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+}
+
+/* Заголовки */
+h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Поля ввода */
+input[type="text"],
+input[type="password"] {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0 15px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+input[type="submit"] {
+    width: 100%;
+    padding: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+input[type="submit"]:hover {
+    background-color: #0056b3;
+}
+
+/* Сообщения об ошибках */
+.error {
+    color: red;
+    font-size: 14px;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+/* Футер — фиксирован внизу */
+footer {
+    background-color: #343a40;
+    color: white;
+    text-align: center;
+    padding: 10px;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    height: 40px;
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Стили страницы истории прохождения тестов */
+.test-result {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 15px;
+    background: #f9f9f9;
+}
+
+.result-details {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.btn-details {
+    background: #3498db;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 3px;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.btn-details:hover {
+    background: #2980b9;
+}
+
+/* Стили для страницы деталей результатов */
+.result-details {
+    display: flex;
+    flex-direction: column; /* Отвечает за вертикальное расположение */
+    gap: 20px; /* Расстояние между вопросами */
+    max-width: 600px; /* Ограничиваем ширину контейнера */
+    overflow-y: auto; /* Добавляем вертикальную прокрутку при необходимости */
+    padding: 20px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.question-block {
+    text-align: center;
+    margin-bottom: 20px; /* Отступ между вопросами */
+}
+/* Левая часть хедера — кнопка "Назад" */
+.header-left {
+    display: flex;
+    align-items: center;
+    margin-left: 20px; /* Отступ от левого края */
+}
+
+/* Кнопка "Назад" */
+.btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background-color: #6c757d;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: background-color 0.3s;
+}
+
+.btn-back:hover {
+    background-color: #5a6268;
+}
+
+/* Статистика администратора */
+.statistics-container {
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.statistics-container h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #333;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+}
+
+.stat-icon {
+    font-size: 2.5em;
+    margin-right: 15px;
+    color: #007bff;
+}
+
+.stat-content h3 {
+    margin: 0 0 10px 0;
+    color: #555;
+    font-size: 1.1em;
+}
+
+.stat-number {
+    margin: 0;
+    font-size: 2em;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Цвета для разных карточек */
+.stat-card:nth-child(1) .stat-icon { color: #17a2b8; } /* Пользователи */
+.stat-card:nth-child(2) .stat-icon { color: #28a745; } /* Тесты */
+.stat-card:nth-child(3) .stat-icon { color: #ffc107; } /* Результаты */

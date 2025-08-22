@@ -1,0 +1,68 @@
+CREATE TABLE users (
+                       id BIGSERIAL PRIMARY KEY,
+                       login VARCHAR(50) UNIQUE NOT NULL,
+                       password VARCHAR(255) NOT NULL,
+                       role VARCHAR(20) NOT NULL
+);
+
+
+CREATE TABLE tests (
+                       id SERIAL PRIMARY KEY,
+                       title VARCHAR(255) NOT NULL,
+                       topic VARCHAR(100) NOT NULL,
+                       created_by BIGINT NOT NULL
+);
+
+ALTER TABLE tests
+    ADD CONSTRAINT fk_tests_created_by
+        FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE;
+
+CREATE TABLE questions (
+                           id SERIAL PRIMARY KEY,
+                           test_id INTEGER NOT NULL,
+                           text TEXT NOT NULL
+);
+
+ALTER TABLE questions
+    ADD CONSTRAINT fk_questions_test_id
+        FOREIGN KEY (test_id) REFERENCES tests(id) ON DELETE CASCADE;
+
+CREATE TABLE answers (
+                         id SERIAL PRIMARY KEY,
+                         question_id INTEGER NOT NULL,
+                         text TEXT NOT NULL,
+                         is_correct BOOLEAN DEFAULT FALSE
+);
+
+ALTER TABLE answers
+    ADD CONSTRAINT fk_answers_question_id
+        FOREIGN KEY (question_id) REFERENCES questions(id) ON DELETE CASCADE;
+
+CREATE TABLE test_results (
+                              id BIGSERIAL PRIMARY KEY,           -- ← BIGSERIAL для long
+                              user_id BIGINT NOT NULL,
+                              test_id INTEGER NOT NULL,
+                              date TIMESTAMP DEFAULT CURRENT_TIMESTAMP  -- ← Автозаполнение даты
+);
+
+-- 2. Внешние ключи
+ALTER TABLE test_results
+    ADD CONSTRAINT fk_test_results_user_id
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE;
+
+ALTER TABLE test_results
+    ADD CONSTRAINT fk_test_results_test_id
+        FOREIGN KEY (test_id) REFERENCES tests(id) ON DELETE CASCADE;
+
+CREATE TABLE result_answers (
+                                id BIGSERIAL PRIMARY KEY,
+                                result_id BIGINT NOT NULL,
+                                asked_question TEXT NOT NULL,
+                                selected_answer TEXT NOT NULL,
+                                correct BOOLEAN NOT NULL,
+                                correct_answer TEXT
+);
+
+ALTER TABLE result_answers
+    ADD CONSTRAINT fk_result_answers_result_id
+        FOREIGN KEY (result_id) REFERENCES test_results(id) ON DELETE CASCADE;

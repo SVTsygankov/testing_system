@@ -1,0 +1,124 @@
+/* test-list.css */
+.test-list-container {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f5f5f5;
+}
+
+.test-list-wrapper {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    overflow: hidden;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.test-list-header {
+    padding: 20px;
+    margin: 0;
+    background: #343a40;
+    color: white;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.spacer {
+    height: 20px;
+}
+
+/* Таблица тестов */
+.test-table-container {
+    overflow-y: auto;
+    max-height: calc(100vh - 200px);
+}
+
+.tests-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.tests-table th {
+    background: #f8f9fa;
+    padding: 15px 20px;
+    text-align: left;
+    position: sticky;
+    top: 60px;
+    z-index: 90;
+    border-bottom: 2px solid #ddd;
+}
+
+.tests-table th:first-child {
+    width: 70%;
+}
+
+.tests-table th:last-child {
+    width: 30%;
+}
+
+.tests-table td {
+    padding: 15px 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.tests-table tr:hover td {
+    background: #f8f9fa;
+}
+
+/* Тема теста */
+.test-topic-header {
+    font-size: 1.4em;
+    font-weight: bold;
+    padding: 20px 20px 10px 20px;
+    margin: 0;
+    background: #e9ecef;
+    border-bottom: 2px solid #ddd;
+}
+
+/* Кнопка "Пройти тест" */
+.take-test-btn {
+    display: inline-block;
+    padding: 8px 16px;
+    background: #007bff;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    float: right;
+    margin-right: 20px;
+    transition: background-color 0.2s;
+}
+
+.take-test-btn:hover {
+    background: #0056b3;
+}
+
+/* Нет тестов */
+.no-tests-message {
+    padding: 30px 20px;
+    text-align: center;
+    color: #666;
+    font-style: italic;
+}
+
+/* Ссылка на историю */
+.history-link-container {
+    display: block;
+    padding: 20px;
+    text-align: center;
+}
+
+.history-link {
+    padding: 10px 20px;
+    background: #6c757d;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.history-link:hover {
+    background: #545b62;
+}
