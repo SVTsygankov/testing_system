@@ -10,7 +10,7 @@
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@ page import="com.fasterxml.jackson.databind.ObjectMapper" %>
-<%@ page import="com.svtsygankov.project_servlet_java_rush.entity.Test" %>
+<%@ page import="com.svtsygankov.test_system.entity.Test" %>
 
 <%
   Test test = (Test) request.getAttribute("test");

@@ -7,11 +7,11 @@ import java.util.List;
 import java.util.Optional;
 
 public interface UserDao {
-    User save(Session session, User user);
-    Optional<User> findById(Session session, Long id);
-    Optional<User> findByLogin(Session session, String login);
-    List<User> findAll(Session session);
-    boolean existsByLogin(Session session, String login);
-    void delete(Session session, Long id);
-    long count(Session session);
+    User save(User user);
+    Optional<User> findById(Long id);
+    Optional<User> findByLogin(String login);
+    List<User> findAll();
+    boolean existsByLogin(String login);
+    void delete(Long id);
+    long count();
 }

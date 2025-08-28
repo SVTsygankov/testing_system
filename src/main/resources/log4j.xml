@@ -12,7 +12,7 @@
     </appender>
     
     <appender name="file" class="org.apache.log4j.RollingFileAppender">
-        <param name="file" value="hibernate-starter.log"/>
+        <param name="file" value="test_system.log"/>
 
         <param name="append" value="true"/>
         <param name="maxFileSize" value="1KB"/>
