@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static com.svtsygankov.test_system.listener.ContextListener.OBJECT_MAPPER;
@@ -57,16 +58,15 @@ public class CreateTestServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws IOException {
+
+        resp.setContentType("application/json");
         HttpSession session = req.getSession();
         User currentUser = (User) session.getAttribute("user");
 
-        resp.setContentType("application/json"); // Убедитесь, что это в начале метода
-
+        // Проверка авторизации
         if (currentUser == null) {
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("errors", Collections.singletonList("Пользователь не авторизован"));
-            resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            objectMapper.writeValue(resp.getWriter(), errorResponse);
+            sendErrorResponse(resp, HttpServletResponse.SC_FORBIDDEN,
+                    "Пользователь не авторизован");
             return;
         }
 
@@ -74,10 +74,7 @@ public class CreateTestServlet extends HttpServlet {
             TestForm form = TestFormParser.parse(req, objectMapper);
 
             if (!validator.validateForCreate(form)) {
-                Map<String, Object> errorResponse = new HashMap<>();
-                errorResponse.put("errors", validator.getErrors());
-                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                objectMapper.writeValue(resp.getWriter(), errorResponse);
+                sendValidationErrors(resp, validator.getErrors());
                 return;
             }
 
@@ -88,18 +85,32 @@ public class CreateTestServlet extends HttpServlet {
                     form.getQuestions()
             );
 
-            Map<String, Object> successResponse = new HashMap<>();
-            successResponse.put("success", true);
-            successResponse.put("redirectUrl", "/admin/tests");
-            objectMapper.writeValue(resp.getWriter(), successResponse);
+            sendSuccessResponse(resp, "/admin/tests");
 
         } catch (Exception e) {
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("errors", Collections.singletonList(
-                    e.getMessage() != null ? e.getMessage() : "Неизвестная ошибка"
-            ));
-            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            objectMapper.writeValue(resp.getWriter(), errorResponse);
+            sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    e.getMessage() != null ? e.getMessage() : "Неизвестная ошибка");
         }
+    }
+
+    private void sendValidationErrors(HttpServletResponse resp, List<String> errors) throws IOException {
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("errors", errors);
+        resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+        objectMapper.writeValue(resp.getWriter(), errorResponse);
+    }
+
+    private void sendErrorResponse(HttpServletResponse resp, int status, String message) throws IOException {
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("errors", Collections.singletonList(message));
+        resp.setStatus(status);
+        objectMapper.writeValue(resp.getWriter(), errorResponse);
+    }
+
+    private void sendSuccessResponse(HttpServletResponse resp, String redirectUrl) throws IOException {
+        Map<String, Object> successResponse = new HashMap<>();
+        successResponse.put("success", true);
+        successResponse.put("redirectUrl", redirectUrl);
+        objectMapper.writeValue(resp.getWriter(), successResponse);
     }
 }
