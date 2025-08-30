@@ -11,11 +11,13 @@
 <%@ taglib prefix="fn" uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@ page import="com.fasterxml.jackson.databind.ObjectMapper" %>
 <%@ page import="com.svtsygankov.test_system.entity.Test" %>
+<%@ page import="com.svtsygankov.test_system.dto.TestDto" %>
 
 <%
   Test test = (Test) request.getAttribute("test");
+  TestDto testDto = TestDto.fromEntity(test);  // ← Преобразуем в DTO
   ObjectMapper objectMapper = (ObjectMapper) application.getAttribute("objectMapper");
-  String testJson = objectMapper.writeValueAsString(test)
+  String testJson = objectMapper.writeValueAsString(testDto)  // ← Сериализуем DTO
           .replace("'", "\\'")
           .replace("\"", "\\\"");
 %>

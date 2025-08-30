@@ -17,14 +17,13 @@ import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import static com.svtsygankov.test_system.listener.ContextListener.OBJECT_MAPPER;
 import static com.svtsygankov.test_system.listener.ContextListener.TEST_FORM_VALIDATOR;
 import static com.svtsygankov.test_system.listener.ContextListener.TEST_SERVICE;
+import static com.svtsygankov.test_system.util.ResponseUtils.sendErrorResponse;
+import static com.svtsygankov.test_system.util.ResponseUtils.sendSuccessResponse;
+import static com.svtsygankov.test_system.util.ResponseUtils.sendValidationErrors;
 
 @WebServlet("/admin/test/create")
 public class CreateTestServlet extends HttpServlet {
@@ -65,7 +64,7 @@ public class CreateTestServlet extends HttpServlet {
 
         // Проверка авторизации
         if (currentUser == null) {
-            sendErrorResponse(resp, HttpServletResponse.SC_FORBIDDEN,
+            sendErrorResponse(resp, objectMapper, HttpServletResponse.SC_FORBIDDEN,
                     "Пользователь не авторизован");
             return;
         }
@@ -74,7 +73,7 @@ public class CreateTestServlet extends HttpServlet {
             TestForm form = TestFormParser.parse(req, objectMapper);
 
             if (!validator.validateForCreate(form)) {
-                sendValidationErrors(resp, validator.getErrors());
+                sendValidationErrors(resp, objectMapper, validator.getErrors());
                 return;
             }
 
@@ -85,32 +84,11 @@ public class CreateTestServlet extends HttpServlet {
                     form.getQuestions()
             );
 
-            sendSuccessResponse(resp, "/admin/tests");
+            sendSuccessResponse(resp, objectMapper,"/admin/tests");
 
         } catch (Exception e) {
-            sendErrorResponse(resp, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+            sendErrorResponse(resp, objectMapper, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                     e.getMessage() != null ? e.getMessage() : "Неизвестная ошибка");
         }
-    }
-
-    private void sendValidationErrors(HttpServletResponse resp, List<String> errors) throws IOException {
-        Map<String, Object> errorResponse = new HashMap<>();
-        errorResponse.put("errors", errors);
-        resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-        objectMapper.writeValue(resp.getWriter(), errorResponse);
-    }
-
-    private void sendErrorResponse(HttpServletResponse resp, int status, String message) throws IOException {
-        Map<String, Object> errorResponse = new HashMap<>();
-        errorResponse.put("errors", Collections.singletonList(message));
-        resp.setStatus(status);
-        objectMapper.writeValue(resp.getWriter(), errorResponse);
-    }
-
-    private void sendSuccessResponse(HttpServletResponse resp, String redirectUrl) throws IOException {
-        Map<String, Object> successResponse = new HashMap<>();
-        successResponse.put("success", true);
-        successResponse.put("redirectUrl", redirectUrl);
-        objectMapper.writeValue(resp.getWriter(), successResponse);
     }
 }

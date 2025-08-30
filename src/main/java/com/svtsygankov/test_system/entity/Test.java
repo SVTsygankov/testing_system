@@ -1,5 +1,6 @@
 package com.svtsygankov.test_system.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -48,6 +49,11 @@ public class Test {
     public void addQuestion(Question question) {
         questions.add(question);
         question.setTest(this);
+    }
+
+    @JsonIgnore
+    public List<Question> getQuestions() {
+        return questions;
     }
 
     public void addQuestions(List<Question> questions) {

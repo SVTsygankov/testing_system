@@ -3,7 +3,9 @@ package com.svtsygankov.test_system.servlet.admin;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.svtsygankov.test_system.dto.TestForm;
 import com.svtsygankov.test_system.entity.Test;
+import com.svtsygankov.test_system.entity.User;
 import com.svtsygankov.test_system.service.TestService;
+import com.svtsygankov.test_system.util.ResponseUtils;
 import com.svtsygankov.test_system.util.TestFormParser;
 import com.svtsygankov.test_system.util.TestFormValidator;
 import jakarta.servlet.ServletConfig;
@@ -12,6 +14,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 
@@ -38,21 +41,43 @@ public class EditTestServlet extends HttpServlet {
             throws ServletException, IOException {
 
         try {
-            int testId = Integer.parseInt(req.getParameter("id"));
+            String idParam = req.getParameter("id");
+            if (idParam == null || idParam.trim().isEmpty()) {
+                resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "ID теста обязателен");
+                return;
+            }
+
+            int testId = Integer.parseInt(idParam);
             Test test = testService.findById(testId);
+
+            if (test == null) {
+                resp.sendError(HttpServletResponse.SC_NOT_FOUND, "Тест не найден");
+                return;
+            }
 
             req.setAttribute("test", test);
             req.setAttribute("contentPage", "/WEB-INF/views/admin/edit-test.jsp");
             req.getRequestDispatcher("/WEB-INF/views/layout.jsp").forward(req, resp);
 
         } catch (NumberFormatException e) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Неверный ID теста");
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, "Неверный формат ID теста");
+        } catch (Exception e) {
+            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Ошибка загрузки теста");
         }
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
-            throws IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json");
+        HttpSession session = req.getSession();
+        User currentUser = (User) session.getAttribute("user");
+
+        // Проверка авторизации
+        if (currentUser == null) {
+            ResponseUtils.sendErrorResponse(resp, objectMapper, HttpServletResponse.SC_FORBIDDEN,
+                    "Пользователь не авторизован");
+            return;
+        }
 
         try {
             // Парсинг данных формы
@@ -60,35 +85,37 @@ public class EditTestServlet extends HttpServlet {
 
             // Валидация
             if (!validator.validateForUpdate(form)) {
-                resp.setContentType("application/json");
-                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST); // 400 статус
-                resp.getWriter().write(
-                        "{\"errors\": " + objectMapper.writeValueAsString(validator.getErrors()) + "}"
-                );
+                ResponseUtils.sendValidationErrors(resp, objectMapper, validator.getErrors());
                 return;
             }
 
-            // Получаем текущий тест для сохранения created_by
+            // Проверка существования теста
             Test existingTest = testService.findById(form.getId());
+            if (existingTest == null) {
+                ResponseUtils.sendErrorResponse(resp, objectMapper, HttpServletResponse.SC_NOT_FOUND,
+                        "Тест не найден");
+                return;
+            }
+
             // Обновление теста
             Test updatedTest = Test.builder()
                     .id(form.getId())
                     .title(form.getTitle())
                     .topic(form.getTopic())
-                    .createdBy(existingTest.getCreatedBy())
-//                    .questions(form.getQuestions())
+                    .createdBy(existingTest.getCreatedBy()) // Сохраняем создателя
                     .build();
 
             testService.updateTest(updatedTest);
 
-            // Успешный ответ для AJAX
-            resp.setContentType("application/json");
-            resp.getWriter().write("{\"success\": true, \"redirectUrl\": \"/admin/tests\"}");
+            // Успешный ответ
+            ResponseUtils.sendSuccessResponse(resp, objectMapper, "/admin/tests");
 
+        } catch (NumberFormatException e) {
+            ResponseUtils.sendErrorResponse(resp, objectMapper, HttpServletResponse.SC_BAD_REQUEST,
+                    "Неверный формат данных");
         } catch (Exception e) {
-            resp.setContentType("application/json");
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            resp.getWriter().write("{\"errors\": [\"" + e.getMessage() + "\"]}");
+            ResponseUtils.sendErrorResponse(resp, objectMapper, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    e.getMessage() != null ? e.getMessage() : "Неизвестная ошибка");
         }
     }
 }
