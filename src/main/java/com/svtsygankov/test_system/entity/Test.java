@@ -45,13 +45,12 @@ public class Test {
     private List<Question> questions = new ArrayList<>();
 
 
-    // Удобные методы для работы со списком вопросов
+    // Устанавливает двухстороннюю связь
     public void addQuestion(Question question) {
         questions.add(question);
         question.setTest(this);
     }
 
-    @JsonIgnore
     public List<Question> getQuestions() {
         return questions;
     }

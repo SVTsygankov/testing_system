@@ -1,6 +1,7 @@
 package com.svtsygankov.test_system.service;
 
 import com.svtsygankov.test_system.dao.TestDao;
+import com.svtsygankov.test_system.dto.TestForm;
 import com.svtsygankov.test_system.entity.Answer;
 import com.svtsygankov.test_system.entity.Question;
 import com.svtsygankov.test_system.entity.Test;
@@ -8,6 +9,8 @@ import com.svtsygankov.test_system.dto.QuestionDto;
 import com.svtsygankov.test_system.dto.AnswerDto;
 
 import lombok.AllArgsConstructor;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,16 +37,15 @@ public class TestService {
                 .createdBy(authorId)
                 .build();
 
-        for (QuestionDto dto : questionDtos) {
-            Question question = new Question(dto.getText());
+        // Добавляем вопросы, используя новый вспомогательный метод
+        if (questionDtos != null && !questionDtos.isEmpty()) {
+            for (QuestionDto dto : questionDtos) {
+                // Создаем вопрос с ответами из DTO
+                Question question = createQuestionFromDto(dto); // <-- Используем новый метод
 
-            // Создаём ответы из DTO
-            for (AnswerDto answerDto : dto.getAnswers()) {
-                Answer answer = new Answer(answerDto.getText(), answerDto.isCorrect());
-                question.addAnswer(answer);
+                // Устанавливаем двустороннюю связь между Question и Test
+                test.addQuestion(question); // Это внутри делает question.setTest(test)
             }
-
-            test.addQuestion(question);
         }
 
         // Сохраняем тест (каскадирование сохранит вопросы и ответы)
@@ -52,9 +54,77 @@ public class TestService {
     }
 
     /**
+     * Обновляет тест на основе данных из TestForm DTO.
+     * Предполагается, что авторизация и базовая валидация уже пройдены.
+     *
+     * @param form DTO с обновлёнными данными теста.
+     * @return Обновлённая сущность Test.
+     * @throws IllegalArgumentException если тест с указанным ID не найден.
+     */
+    public Test updateTestFromForm(TestForm form) {
+
+        // 1. Найти существующий тест по ID
+        Optional<Test> existingTestOpt = testDao.findById(form.getId());
+        if (existingTestOpt.isEmpty()) {
+            throw new IllegalArgumentException("Тест с ID " + form.getId() + " не найден.");
+        }
+
+        Test existingTest = existingTestOpt.get();
+
+        // 2. Обновить базовые поля теста
+        existingTest.setTitle(form.getTitle());
+        existingTest.setTopic(form.getTopic());
+        // Поле createdBy НЕ обновляется, оно остаётся прежним
+
+        // 3. Обновить вопросы и ответы
+        updateQuestionsAndAnswers(existingTest, form.getQuestions());
+
+        // 4. Сохранить обновлённый тест
+        // Hibernate отслеживает изменения в managed сущностях,
+        // но явный вызов save/merge может быть полезен в зависимости от настроек.
+        testDao.save(existingTest);
+
+        return existingTest;
+    }
+    /**
+     * Внутренний метод для обновления коллекции вопросов и ответов теста.
+     * Удаляет старые вопросы/ответы, добавляет новые.
+     * Использует orphanRemoval=true и cascade для автоматического удаления.
+     */
+    private void updateQuestionsAndAnswers(Test existingTest, List<QuestionDto> formQuestions) {
+
+        // --- Стратегия: Очистить всё и создать заново ---
+        // Получаем текущие вопросы из существующего теста
+        List<Question> currentQuestions = existingTest.getQuestions();
+
+        // Создаём копию списка для безопасного итерирования
+        // (чтобы избежать ConcurrentModificationException при удалении)
+        List<Question> questionsToRemove = new ArrayList<>(currentQuestions);
+        for (Question question : questionsToRemove) {
+            // removeQuestion отвязывает вопрос от теста и удаляет его из списка.
+            // orphanRemoval=true в аннотации @OneToMany в Test заставит Hibernate
+            // автоматически удалить Question из БД, если он больше ни с чем не связан.
+            existingTest.removeQuestion(question);
+            // session.remove(question); // Обычно не нужно при orphanRemoval
+        }
+
+        // --- Добавление новых вопросов из DTO ---
+        // Теперь добавляем новые вопросы из DTO, используя вспомогательный метод
+        if (formQuestions != null && !formQuestions.isEmpty()) {
+            for (QuestionDto questionDto : formQuestions) {
+                // Создаём новую сущность вопроса (и связанные ответы) из DTO
+                Question newQuestion = createQuestionFromDto(questionDto); // <-- Используем новый метод
+
+                // Устанавливаем двустороннюю связь между новым Question и Test
+                existingTest.addQuestion(newQuestion); // Это внутри делает newQuestion.setTest(existingTest)
+            }
+        }
+    }
+
+    /**
      * Обновление теста
      */
-    public void updateTest(Test test) {
+    public void updateTest (Test test){
 
         // Проверяем существование теста
         Optional<Test> existingTest = testDao.findById(test.getId());
@@ -68,7 +138,7 @@ public class TestService {
     /**
      * Поиск теста по ID
      */
-    public Test findById(int id) {
+    public Test findById (Integer id){
 
         Optional<Test> testOpt = testDao.findById(id);
         return testOpt.orElseThrow(() ->
@@ -78,7 +148,7 @@ public class TestService {
     /**
      * Удаление теста по ID
      */
-    public boolean deleteById(int id) {
+    public boolean deleteById ( int id){
 
         Optional<Test> testOpt = testDao.findById(id);
         if (testOpt.isPresent()) {
@@ -89,9 +159,32 @@ public class TestService {
     }
 
     /**
+     * Создаёт сущность Question из DTO, включая связанные ответы.
+     * Не устанавливает связь с Test (это делается вызывающим кодом).
+     *
+     * @param questionDto DTO вопроса.
+     * @return Новая сущность Question.
+     */
+    private Question createQuestionFromDto(QuestionDto questionDto) {
+        // Создаём новую сущность вопроса
+        Question question = new Question(questionDto.getText());
+
+        // Обрабатываем ответы на вопрос
+        if (questionDto.getAnswers() != null && !questionDto.getAnswers().isEmpty()) {
+            for (AnswerDto answerDto : questionDto.getAnswers()) {
+                // Создаём новую сущность ответа
+                Answer answer = new Answer(answerDto.getText(), answerDto.isCorrect());
+                // Устанавливаем двустороннюю связь между Answer и Question
+                question.addAnswer(answer); // Это внутри делает answer.setQuestion(question)
+            }
+        }
+        return question;
+    }
+
+    /**
      * Получение количества тестов
      */
-    public long getTestCount() {
+    public long getTestCount () {
         return testDao.count();
     }
 }

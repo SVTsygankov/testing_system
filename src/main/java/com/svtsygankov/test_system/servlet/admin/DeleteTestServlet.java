@@ -1,16 +1,18 @@
 package com.svtsygankov.test_system.servlet.admin;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.svtsygankov.test_system.entity.User;
 import com.svtsygankov.test_system.service.TestService;
+import com.svtsygankov.test_system.util.ResponseUtils;
 import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 
 import static com.svtsygankov.test_system.listener.ContextListener.OBJECT_MAPPER;
 import static com.svtsygankov.test_system.listener.ContextListener.TEST_SERVICE;
@@ -31,25 +33,34 @@ public class DeleteTestServlet extends HttpServlet{
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json");
-        PrintWriter out = resp.getWriter();
+        HttpSession session = req.getSession();
+        User currentUser = (User) session.getAttribute("user");
 
         try {
-            int testId = Integer.parseInt(req.getParameter("id"));
-
-            if (!testService.deleteById(testId)) {
-                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                out.write("{\"error\":\"Тест не найден\"}");
+            String idParam = req.getParameter("id");
+            if (idParam == null || idParam.trim().isEmpty()) {
+                ResponseUtils.sendErrorResponse(resp, objectMapper, HttpServletResponse.SC_BAD_REQUEST,
+                        "ID теста обязателен");
                 return;
             }
 
-            out.write("{\"success\":true, \"redirectUrl\":\"/admin/tests\"}");
+            int testId = Integer.parseInt(idParam);
+
+            if (!testService.deleteById(testId)) {
+                ResponseUtils.sendErrorResponse(resp, objectMapper, HttpServletResponse.SC_NOT_FOUND,
+                        "Тест не найден");
+                return;
+            }
+
+            // Успешный ответ
+            ResponseUtils.sendSuccessResponse(resp, objectMapper, "/admin/tests");
 
         } catch (NumberFormatException e) {
-            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            out.write("{\"error\":\"Неверный формат ID теста\"}");
+            ResponseUtils.sendErrorResponse(resp, objectMapper, HttpServletResponse.SC_BAD_REQUEST,
+                    "Неверный формат ID теста");
         } catch (Exception e) {
-            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            out.write("{\"error\":\"Ошибка сервера: " + e.getMessage() + "\"}");
+            ResponseUtils.sendErrorResponse(resp, objectMapper, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    e.getMessage() != null ? e.getMessage() : "Неизвестная ошибка");
         }
     }
 }

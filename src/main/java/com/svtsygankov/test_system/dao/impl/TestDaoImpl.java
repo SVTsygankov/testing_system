@@ -19,7 +19,7 @@ public class TestDaoImpl implements TestDao {
         if (test.getId() == null) {
             session.persist(test);
         } else {
-            session.merge(test);
+            test = (Test) session.merge(test); // обновить ссылку!
         }
         return test;
     }

@@ -89,30 +89,19 @@ public class EditTestServlet extends HttpServlet {
                 return;
             }
 
-            // Проверка существования теста
-            Test existingTest = testService.findById(form.getId());
-            if (existingTest == null) {
-                ResponseUtils.sendErrorResponse(resp, objectMapper, HttpServletResponse.SC_NOT_FOUND,
-                        "Тест не найден");
-                return;
-            }
-
-            // Обновление теста
-            Test updatedTest = Test.builder()
-                    .id(form.getId())
-                    .title(form.getTitle())
-                    .topic(form.getTopic())
-                    .createdBy(existingTest.getCreatedBy()) // Сохраняем создателя
-                    .build();
-
-            testService.updateTest(updatedTest);
-
-            // Успешный ответ
+            // Всю логику переносим в сервис
+            Test updatedTest = testService.updateTestFromForm(form);
             ResponseUtils.sendSuccessResponse(resp, objectMapper, "/admin/tests");
+
 
         } catch (NumberFormatException e) {
             ResponseUtils.sendErrorResponse(resp, objectMapper, HttpServletResponse.SC_BAD_REQUEST,
                     "Неверный формат данных");
+
+        } catch (IllegalArgumentException e) {
+            ResponseUtils.sendErrorResponse(resp, objectMapper, HttpServletResponse.SC_NOT_FOUND,
+                    e.getMessage());
+
         } catch (Exception e) {
             ResponseUtils.sendErrorResponse(resp, objectMapper, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                     e.getMessage() != null ? e.getMessage() : "Неизвестная ошибка");
