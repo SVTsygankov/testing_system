@@ -1,9 +1,11 @@
 package com.svtsygankov.test_system.listener;
 
+import com.svtsygankov.test_system.dao.impl.ResultDaoImpl;
 import com.svtsygankov.test_system.dao.impl.TestDaoImpl;
 import com.svtsygankov.test_system.dao.impl.UserDaoImpl;
 import com.svtsygankov.test_system.service.AuthenticationService;
 import com.svtsygankov.test_system.service.LoginAttemptServiceImpl;
+import com.svtsygankov.test_system.service.ResultService;
 import com.svtsygankov.test_system.service.TestService;
 import com.svtsygankov.test_system.service.UserService;
 import com.svtsygankov.test_system.util.TestFormValidator;
@@ -26,7 +28,7 @@ public class ContextListener implements ServletContextListener {
     public static final String OBJECT_MAPPER = "objectMapper";
     public static final String TEST_SERVICE = "testService";
     public static final String USER_SERVICE = "userService";
-    public static final String RESULTS_SERVICE = "resultsService";
+    public static final String RESULT_SERVICE = "resultsService";
     public static final String TEST_FORM_VALIDATOR = "testFormValidator";
 
     @SneakyThrows
@@ -47,6 +49,8 @@ public class ContextListener implements ServletContextListener {
         var authenticationService = new AuthenticationService(loginAttemptService, userService);
         var testDao = new TestDaoImpl();
         var testService = new TestService(testDao);
+        var resultDao = new ResultDaoImpl();
+        var resultService = new ResultService(resultDao, testDao, userDao);
         var validator = new TestFormValidator();
 
         Locale.setDefault(new Locale("ru", "RU"));
@@ -55,6 +59,7 @@ public class ContextListener implements ServletContextListener {
         servletContext.setAttribute(AUTHENTICATION_SERVICE, authenticationService);
         servletContext.setAttribute(USER_SERVICE, userService);
         servletContext.setAttribute(TEST_SERVICE, testService);
+        servletContext.setAttribute(RESULT_SERVICE, resultService);
         servletContext.setAttribute(TEST_FORM_VALIDATOR, validator);
     }
 }

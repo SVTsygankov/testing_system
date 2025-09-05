@@ -1,6 +1,7 @@
 package com.svtsygankov.test_system.entity;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -49,10 +50,34 @@ public class Question {
         this.text = text;
     }
 
+    @JsonIgnore
+    public Test getTest() { return test;}
+
+    @JsonIgnore
+    public List<Answer> getAnswers() { return answers; }
+
     public void addAnswer(Answer answer) {
         if (answer != null && !answers.contains(answer)) {
             answers.add(answer);
             answer.setQuestion(this);
         }
+    }
+
+    public void removeAnswer(Answer answer) {
+        if (answer != null && this.answers.contains(answer)) {
+            this.answers.remove(answer);
+            answer.setQuestion(null); // ← ВАЖНО: разрываем связь с обеих сторон
+        }
+    }
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Question question)) return false;
+        return id != null && id.equals(question.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }

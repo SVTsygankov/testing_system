@@ -20,6 +20,8 @@ public class HibernateUtil {
                 configuration.addAnnotatedClass(com.svtsygankov.test_system.entity.Test.class);
                 configuration.addAnnotatedClass(com.svtsygankov.test_system.entity.Question.class);
                 configuration.addAnnotatedClass(com.svtsygankov.test_system.entity.Answer.class);
+                configuration.addAnnotatedClass(com.svtsygankov.test_system.entity.UserAnswer.class);
+                configuration.addAnnotatedClass(com.svtsygankov.test_system.entity.Result.class);
 
                 StandardServiceRegistryBuilder registryBuilder =
                         new StandardServiceRegistryBuilder()

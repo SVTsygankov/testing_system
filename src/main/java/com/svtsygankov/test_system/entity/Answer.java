@@ -1,5 +1,6 @@
 package com.svtsygankov.test_system.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -39,5 +40,20 @@ public class Answer {
     public Answer(String text, boolean correct) {
         this.text = text;
         this.correct = correct;
+    }
+
+    @JsonIgnore
+    public Question getQuestion() { return question; }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Answer answer)) return false;
+        return id != null && id.equals(answer.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }

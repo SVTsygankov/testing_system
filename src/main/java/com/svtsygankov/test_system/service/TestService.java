@@ -10,9 +10,12 @@ import com.svtsygankov.test_system.dto.AnswerDto;
 
 import lombok.AllArgsConstructor;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 public class TestService {
@@ -24,6 +27,16 @@ public class TestService {
      */
     public List<Test> findAll() {
         return testDao.findAll();
+    }
+
+    /**
+     * Получение всех тестов отсортированных по темам
+     */
+
+    public Map<String, List<Test>> getTestsGroupedByTopic() {
+        List<Test> allTests = testDao.findAll();
+        return allTests.stream()
+                .collect(Collectors.groupingBy(Test::getTopic));
     }
 
     /**
@@ -61,9 +74,9 @@ public class TestService {
      * @return Обновлённая сущность Test.
      * @throws IllegalArgumentException если тест с указанным ID не найден.
      */
+    // Новый подход: точное обновление
     public Test updateTestFromForm(TestForm form) {
 
-        // 1. Найти существующий тест по ID
         Optional<Test> existingTestOpt = testDao.findById(form.getId());
         if (existingTestOpt.isEmpty()) {
             throw new IllegalArgumentException("Тест с ID " + form.getId() + " не найден.");
@@ -71,52 +84,109 @@ public class TestService {
 
         Test existingTest = existingTestOpt.get();
 
-        // 2. Обновить базовые поля теста
         existingTest.setTitle(form.getTitle());
         existingTest.setTopic(form.getTopic());
-        // Поле createdBy НЕ обновляется, оно остаётся прежним
 
-        // 3. Обновить вопросы и ответы
-        updateQuestionsAndAnswers(existingTest, form.getQuestions());
+        updateQuestionsExactly(existingTest, form.getQuestions());
 
         // 4. Сохранить обновлённый тест
-        // Hibernate отслеживает изменения в managed сущностях,
-        // но явный вызов save/merge может быть полезен в зависимости от настроек.
+        // При использовании getCurrentSession() и открытой транзакции в фильтре,
+        // Hibernate автоматически отслеживает изменения.
+        // Явный вызов save/merge может быть не обязателен, но не повредит.
         testDao.save(existingTest);
 
         return existingTest;
-    }
-    /**
-     * Внутренний метод для обновления коллекции вопросов и ответов теста.
-     * Удаляет старые вопросы/ответы, добавляет новые.
-     * Использует orphanRemoval=true и cascade для автоматического удаления.
-     */
-    private void updateQuestionsAndAnswers(Test existingTest, List<QuestionDto> formQuestions) {
 
-        // --- Стратегия: Очистить всё и создать заново ---
-        // Получаем текущие вопросы из существующего теста
+    }
+
+    /**
+     * Точное обновление коллекции вопросов и ответов теста.
+     * Сопоставляет существующие сущности с DTO и выполняет UPDATE/INSERT/DELETE только для изменений.
+     */
+    private void updateQuestionsExactly(Test existingTest, List<QuestionDto> formQuestions) {
+        // Получаем текущие вопросы из БД (уже загружены, если используется LAZY/EAGER или были доступны)
         List<Question> currentQuestions = existingTest.getQuestions();
 
-        // Создаём копию списка для безопасного итерирования
-        // (чтобы избежать ConcurrentModificationException при удалении)
-        List<Question> questionsToRemove = new ArrayList<>(currentQuestions);
+        // Создаем карты для быстрого поиска
+        Map<Integer, Question> currentQuestionMap = currentQuestions.stream()
+                .filter(q -> q.getId() != null) // Только сохраненные вопросы
+                .collect(Collectors.toMap(Question::getId, q -> q));
+
+        Set<Integer> formQuestionIds = formQuestions.stream()
+                .map(QuestionDto::getId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        // --- Удаление вопросов, которых нет в DTO ---
+        List<Question> questionsToRemove = currentQuestions.stream()
+                .filter(q -> q.getId() == null || !formQuestionIds.contains(q.getId()))
+                .collect(Collectors.toList());
+
         for (Question question : questionsToRemove) {
-            // removeQuestion отвязывает вопрос от теста и удаляет его из списка.
-            // orphanRemoval=true в аннотации @OneToMany в Test заставит Hibernate
-            // автоматически удалить Question из БД, если он больше ни с чем не связан.
-            existingTest.removeQuestion(question);
-            // session.remove(question); // Обычно не нужно при orphanRemoval
+            existingTest.removeQuestion(question); // Это удалит из списка и установит question.setTest(null)
+            // orphanRemoval=true в Test заставит Hibernate удалить Question из БД
         }
 
-        // --- Добавление новых вопросов из DTO ---
-        // Теперь добавляем новые вопросы из DTO, используя вспомогательный метод
-        if (formQuestions != null && !formQuestions.isEmpty()) {
-            for (QuestionDto questionDto : formQuestions) {
-                // Создаём новую сущность вопроса (и связанные ответы) из DTO
-                Question newQuestion = createQuestionFromDto(questionDto); // <-- Используем новый метод
+        // --- Обработка вопросов из DTO ---
+        for (int i = 0; i < formQuestions.size(); i++) {
+            QuestionDto questionDto = formQuestions.get(i);
+            Question questionEntity;
 
-                // Устанавливаем двустороннюю связь между новым Question и Test
-                existingTest.addQuestion(newQuestion); // Это внутри делает newQuestion.setTest(existingTest)
+            if (questionDto.getId() != null && currentQuestionMap.containsKey(questionDto.getId())) {
+                // 1. Обновление существующего вопроса
+                questionEntity = currentQuestionMap.get(questionDto.getId());
+                questionEntity.setText(questionDto.getText());
+            } else {
+                // 2. Создание нового вопроса
+                questionEntity = new Question(questionDto.getText());
+                existingTest.addQuestion(questionEntity); // Устанавливает question.setTest(existingTest)
+            }
+
+            // --- Обновление ответов для вопроса ---
+            updateAnswersExactly(questionEntity, questionDto.getAnswers());
+        }
+    }
+
+    /**
+     * Точное обновление коллекции ответов для вопроса.
+     */
+    private void updateAnswersExactly(Question questionEntity, List<AnswerDto> formAnswers) {
+        List<Answer> currentAnswers = questionEntity.getAnswers();
+
+        // Создаем карты для быстрого поиска
+        Map<Integer, Answer> currentAnswerMap = currentAnswers.stream()
+                .filter(a -> a.getId() != null)
+                .collect(Collectors.toMap(Answer::getId, a -> a));
+
+        Set<Integer> formAnswerIds = formAnswers.stream()
+                .map(AnswerDto::getId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        // --- Удаление ответов, которых нет в DTO ---
+        List<Answer> answersToRemove = currentAnswers.stream()
+                .filter(a -> a.getId() == null || !formAnswerIds.contains(a.getId()))
+                .collect(Collectors.toList());
+
+        for (Answer answer : answersToRemove) {
+            questionEntity.removeAnswer(answer); // Удаляет из списка и устанавливает answer.setQuestion(null)
+            // orphanRemoval=true в Question заставит Hibernate удалить Answer из БД
+        }
+
+        // --- Обработка ответов из DTO ---
+        for (int i = 0; i < formAnswers.size(); i++) {
+            AnswerDto answerDto = formAnswers.get(i);
+            Answer answerEntity;
+
+            if (answerDto.getId() != null && currentAnswerMap.containsKey(answerDto.getId())) {
+                // 1. Обновление существующего ответа
+                answerEntity = currentAnswerMap.get(answerDto.getId());
+                answerEntity.setText(answerDto.getText());
+                answerEntity.setCorrect(answerDto.isCorrect());
+            } else {
+                // 2. Создание нового ответа
+                answerEntity = new Answer(answerDto.getText(), answerDto.isCorrect());
+                questionEntity.addAnswer(answerEntity); // Устанавливает answer.setQuestion(questionEntity)
             }
         }
     }

@@ -31,9 +31,7 @@ public abstract class BaseListTestsServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
-            List<Test> tests = testService.findAll();
-            Map<String, List<Test>> testsByTopic = tests.stream()
-                    .collect(Collectors.groupingBy(Test::getTopic));
+            Map<String, List<Test>> testsByTopic = testService.getTestsGroupedByTopic();
 
             req.setAttribute("testsByTopic", testsByTopic);
             req.setAttribute("contentPage", getContentPage());

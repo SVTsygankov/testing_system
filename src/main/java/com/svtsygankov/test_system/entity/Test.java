@@ -44,6 +44,9 @@ public class Test {
     @OneToMany(mappedBy = "test", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private List<Question> questions = new ArrayList<>();
 
+    @Builder.Default
+    @OneToMany(mappedBy = "test", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private List<Result> results = new ArrayList<>();
 
     // Устанавливает двухстороннюю связь
     public void addQuestion(Question question) {
@@ -51,6 +54,7 @@ public class Test {
         question.setTest(this);
     }
 
+    @JsonIgnore
     public List<Question> getQuestions() {
         return questions;
     }
@@ -64,5 +68,31 @@ public class Test {
     public void removeQuestion(Question question) {
         questions.remove(question);
         question.setTest(null);
+    }
+
+    // Удобные методы для работы со списком результатов
+    public void addResult(Result result) {
+        if (result != null && !results.contains(result)) {
+            results.add(result);
+            result.setTest(this); // Устанавливаем обратную связь
+        }
+    }
+
+    public void removeResult(Result result) {
+        if (results.remove(result)) {
+            result.setTest(null); // Убираем обратную связь
+        }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Test test)) return false;
+        return id != null && id.equals(test.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }

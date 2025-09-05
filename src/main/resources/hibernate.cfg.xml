@@ -19,8 +19,8 @@
     <mapping class="com.svtsygankov.test_system.entity.Test"/>
     <mapping class="com.svtsygankov.test_system.entity.Question"/>
     <mapping class="com.svtsygankov.test_system.entity.Answer"/>
-
-
+    <mapping class="com.svtsygankov.test_system.entity.UserAnswer"/>
+    <mapping class="com.svtsygankov.test_system.entity.Result"/>
 
   </session-factory>
 </hibernate-configuration>

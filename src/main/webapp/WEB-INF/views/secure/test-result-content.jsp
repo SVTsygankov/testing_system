@@ -5,6 +5,7 @@
   Time: 14:52
   To change this template use File | Settings | File Templates.
 --%>
+<%-- WEB-INF/views/secure/test-result-content.jsp --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
@@ -15,7 +16,7 @@
   <h1 class="page-title">Результаты тестирования</h1>
 
   <div class="test-info">
-    <p><strong>Тест ID:</strong> ${result.testId}</p>
+    <p><strong>Тест:</strong> ${result.testTitle} (ID: ${result.testId})</p>
     <p><strong>Дата прохождения:</strong>
       <fmt:formatDate value="${resultDateAsDate}" pattern="dd.MM.yyyy HH:mm"/>
     </p>
@@ -23,7 +24,7 @@
 
   <div class="score-summary">
     <div class="score-number">
-      ${result.answers.stream().filter(a -> a.correct).count()} / ${result.answers.size()}
+      ${result.correctCount} / ${result.totalCount}
     </div>
     <div class="score-label">Правильных ответов</div>
   </div>
