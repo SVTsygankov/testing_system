@@ -5,7 +5,8 @@
   Time: 14:52
   To change this template use File | Settings | File Templates.
 --%>
-<%-- WEB-INF/views/secure/test-result-content.jsp --%>
+
+<%-- /WEB-INF/views/secure/test-result-content.jsp --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
@@ -18,7 +19,8 @@
   <div class="test-info">
     <p><strong>Тест:</strong> ${result.testTitle} (ID: ${result.testId})</p>
     <p><strong>Дата прохождения:</strong>
-      <fmt:formatDate value="${resultDateAsDate}" pattern="dd.MM.yyyy HH:mm"/>
+      <%-- Используем result.date из DTO (уже java.util.Date) --%>
+      <fmt:formatDate value="${result.date}" pattern="dd.MM.yyyy HH:mm"/>
     </p>
   </div>
 
@@ -27,6 +29,11 @@
       ${result.correctCount} / ${result.totalCount}
     </div>
     <div class="score-label">Правильных ответов</div>
+    <c:if test="${result.totalCount > 0}">
+      <div class="score-percentage">
+        (${Math.round(result.correctCount * 100.0 / result.totalCount)}%)
+      </div>
+    </c:if>
   </div>
 
   <div class="answers-list">

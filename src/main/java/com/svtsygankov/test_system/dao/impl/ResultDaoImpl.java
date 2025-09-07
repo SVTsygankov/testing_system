@@ -32,8 +32,14 @@ public class ResultDaoImpl implements ResultDao {
     @Override
     public List<Result> findByUserId(Long userId) {
         Session session = HibernateSessionManager.getCurrentSession();
-        Query<Result> query = session.createQuery(
-                "FROM Result r WHERE r.user.id = :userId ORDER BY r.date DESC", Result.class);
+        Query<Result> query = session.createQuery("""
+                        SELECT DISTINCT r FROM Result r
+                        LEFT JOIN FETCH r.answers
+                        LEFT JOIN FETCH r.test
+                        WHERE r.user.id = :userId
+                        ORDER BY r.date DESC
+                        """,Result.class);
+
         query.setParameter("userId", userId);
         return query.getResultList();
     }

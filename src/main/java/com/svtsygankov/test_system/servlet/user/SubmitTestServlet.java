@@ -9,12 +9,10 @@ import com.svtsygankov.test_system.dto.ResultDto;
 import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,7 +20,7 @@ import static com.svtsygankov.test_system.listener.ContextListener.RESULT_SERVIC
 import static com.svtsygankov.test_system.listener.ContextListener.TEST_SERVICE;
 
 @WebServlet("/submit-test")
-public class SubmitTestServlet extends HttpServlet {
+public class SubmitTestServlet extends BaseUserServlet {
     private TestService testService;
     private ResultService resultService;
 
@@ -38,43 +36,31 @@ public class SubmitTestServlet extends HttpServlet {
             throws ServletException, IOException {
 
         try {
-            // 1. Проверка авторизации
             User user = (User) req.getSession().getAttribute("user");
-            if (user == null) {
-                forwardToErrorPage(req, resp, "Пользователь не авторизован");
-                return;
-            }
 
-            // 2. Получаем testId из сессии
             Integer testId = (Integer) req.getSession().getAttribute("currentTestId");
             if (testId == null) {
                 forwardToErrorPage(req, resp, "Сессия теста не инициализирована");
                 return;
             }
 
-            // 3. Проверяем существование теста
             Test test = testService.findById(testId);
             if (test == null) {
                 forwardToErrorPage(req, resp, "Тест не найден");
                 return;
             }
 
-            // 4. Парсим ответы пользователя
             Map<Integer, Integer> questionToAnswerMap = parseAnswers(req);
 
             Result result = resultService.createTestResult(user.getId(), testId, questionToAnswerMap);
-            ResultDto resultDto = resultService.toDto(result);
 
-            // Преобразуем LocalDateTime в Date для JSP
-            java.util.Date resultDateAsDate = java.util.Date.from(
-                    result.getDate().atZone(ZoneId.systemDefault()).toInstant()
-            );
+            ResultDto resultDto = resultService.toDto(result);
 
             req.getSession().removeAttribute("currentTestId");
 
             // 8. Передаем DTO в JSP
             req.setAttribute("result", resultDto);
-            req.setAttribute("resultDateAsDate", resultDateAsDate); // ← Передаём Date
+            // УБРАЛИ resultDateAsDate - он уже в resultDto.date
             req.setAttribute("contentPage", "/WEB-INF/views/secure/test-result-content.jsp");
             req.getRequestDispatcher("/WEB-INF/views/layout.jsp").forward(req, resp);
 
@@ -121,15 +107,5 @@ public class SubmitTestServlet extends HttpServlet {
         }
 
         return answers;
-    }
-
-    /**
-     * Перенаправляет на страницу ошибки.
-     */
-    private void forwardToErrorPage(HttpServletRequest req, HttpServletResponse resp, String errorMessage)
-            throws ServletException, IOException {
-        req.setAttribute("error", errorMessage);
-        req.setAttribute("contentPage", "/WEB-INF/views/alerts.jsp");
-        req.getRequestDispatcher("/WEB-INF/views/layout.jsp").forward(req, resp);
     }
 }

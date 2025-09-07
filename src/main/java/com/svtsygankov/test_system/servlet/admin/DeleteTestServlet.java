@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.svtsygankov.test_system.entity.User;
 import com.svtsygankov.test_system.service.TestService;
 import com.svtsygankov.test_system.util.ResponseUtils;
-import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -24,10 +23,9 @@ public class DeleteTestServlet extends HttpServlet{
     private ObjectMapper objectMapper;
 
     @Override
-    public void init(ServletConfig config) throws ServletException {
-        super.init(config);
-        this.testService = (TestService) config.getServletContext().getAttribute(TEST_SERVICE);
-        this.objectMapper = (ObjectMapper) config.getServletContext().getAttribute(OBJECT_MAPPER);
+    public void init() throws ServletException {
+        this.testService = (TestService) getServletContext().getAttribute(TEST_SERVICE);
+        this.objectMapper = (ObjectMapper) getServletContext().getAttribute(OBJECT_MAPPER);
     }
 
     @Override

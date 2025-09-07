@@ -8,7 +8,6 @@ import com.svtsygankov.test_system.service.TestService;
 import com.svtsygankov.test_system.util.ResponseUtils;
 import com.svtsygankov.test_system.util.TestFormParser;
 import com.svtsygankov.test_system.util.TestFormValidator;
-import jakarta.servlet.ServletConfig;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -29,16 +28,15 @@ public class EditTestServlet extends HttpServlet {
     private TestFormValidator validator;
 
     @Override
-    public void init(ServletConfig config) throws ServletException {
-        super.init(config);
-        this.testService = (TestService) config.getServletContext().getAttribute(TEST_SERVICE);
-        this.objectMapper = (ObjectMapper) config.getServletContext().getAttribute(OBJECT_MAPPER);
-        this.validator = (TestFormValidator) config.getServletContext().getAttribute(TEST_FORM_VALIDATOR);
+    public void init() throws ServletException {
+        this.testService = (TestService) getServletContext().getAttribute(TEST_SERVICE);
+        this.objectMapper = (ObjectMapper) getServletContext().getAttribute(OBJECT_MAPPER);
+        this.validator = (TestFormValidator) getServletContext().getAttribute(TEST_FORM_VALIDATOR);
     }
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
+            throws IOException {
 
         try {
             String idParam = req.getParameter("id");
@@ -71,13 +69,6 @@ public class EditTestServlet extends HttpServlet {
         resp.setContentType("application/json");
         HttpSession session = req.getSession();
         User currentUser = (User) session.getAttribute("user");
-
-        // Проверка авторизации
-        if (currentUser == null) {
-            ResponseUtils.sendErrorResponse(resp, objectMapper, HttpServletResponse.SC_FORBIDDEN,
-                    "Пользователь не авторизован");
-            return;
-        }
 
         try {
             // Парсинг данных формы

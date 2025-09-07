@@ -32,11 +32,10 @@ public class CreateTestServlet extends HttpServlet {
     private ObjectMapper objectMapper;
 
     @Override
-    public void init(ServletConfig config) throws ServletException {
-        super.init(config);
-        this.testService = (TestService) config.getServletContext().getAttribute(TEST_SERVICE);
-        this.objectMapper = (ObjectMapper) config.getServletContext().getAttribute(OBJECT_MAPPER);
-        this.validator = (TestFormValidator) config.getServletContext().getAttribute(TEST_FORM_VALIDATOR);
+    public void init() throws ServletException {
+        this.testService = (TestService) getServletContext().getAttribute(TEST_SERVICE);
+        this.objectMapper = (ObjectMapper) getServletContext().getAttribute(OBJECT_MAPPER);
+        this.validator = (TestFormValidator) getServletContext().getAttribute(TEST_FORM_VALIDATOR);
     }
 
     @Override

@@ -5,6 +5,7 @@
   Time: 14:15
   To change this template use File | Settings | File Templates.
 --%>
+<%-- /WEB-INF/views/secure/result-details-content.jsp --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
@@ -15,71 +16,60 @@
 <div class="result-details">
     <h2><fmt:message key="details.test_results"/></h2>
 
-    <p class="centered">
-        <strong><fmt:message key="details.test_id"/>:</strong> ${result.testId}
-    </p>
-
-    <p class="centered">
-        <strong><fmt:message key="details.date"/>:</strong>
-        <fmt:formatDate value="${resultDateAsDate}" pattern="dd.MM.yyyy HH:mm"/>
-    </p>
+    <div class="test-summary">
+        <p><strong><fmt:message key="details.test_results"/>:</strong> ${result.testTitle}</p>
+        <p><strong><fmt:message key="details.test_id"/>:</strong> ${result.testId}</p>
+        <p><strong><fmt:message key="details.date"/>:</strong>
+            <%-- Используем result.date из DTO --%>
+            <fmt:formatDate value="${result.date}" pattern="dd.MM.yyyy HH:mm"/>
+        </p>
+        <p><strong><fmt:message key="details.score"/>:</strong>
+            ${result.correctCount} / ${result.totalCount}
+            <c:if test="${result.totalCount > 0}">
+                (${Math.round(result.correctCount * 100.0 / result.totalCount)}%)
+            </c:if>
+        </p>
+    </div>
 
     <c:if test="${empty result.answers}">
         <p class="centered"><em><fmt:message key="details.no_questions"/></em></p>
     </c:if>
 
-    <c:forEach items="${result.answers}" var="answer" varStatus="status">
-        <div class="question-block">
-            <h4>${status.index + 1}. ${answer.askedQuestion}</h4>
+    <div class="questions-container">
+        <c:forEach items="${result.answers}" var="answer" varStatus="status">
+            <div class="question-block ${answer.correct ? 'correct' : 'incorrect'}">
+                <div class="question-header">
+                    <h4>${status.index + 1}. ${answer.askedQuestion}</h4>
+                    <span class="question-status ${answer.correct ? 'status-correct' : 'status-incorrect'}">
+                            ${answer.correct ? '✓ Верно' : '✗ Неверно'}
+                    </span>
+                </div>
 
-            <p>
-                <strong><fmt:message key="details.your_answer"/>:</strong>
-                <span class="${answer.correct ? 'text-success' : 'text-danger'}">
-                        ${answer.selectedAnswer}
-                </span>
-            </p>
-
-            <c:choose>
-                <c:when test="${answer.correct}">
-                    <p class="text-success">
-                        <fmt:message key="details.correct"/>
-                    </p>
-                </c:when>
-                <c:otherwise>
-                    <p class="text-danger">
-                        <fmt:message key="details.wrong"/>
-                    </p>
+                <div class="answer-section">
                     <p>
-                        <strong><fmt:message key="details.correct_answer"/>:</strong>
-                            ${answer.correctAnswer}
+                        <strong><fmt:message key="details.your_answer"/>:</strong>
+                        <span class="${answer.correct ? 'text-success' : 'text-danger'}">
+                                ${answer.selectedAnswer}
+                        </span>
                     </p>
-                </c:otherwise>
-            </c:choose>
-        </div>
-        <br/>
-    </c:forEach>
 
-<%--    <c:forEach items="${result.answers}" var="answer" varStatus="status">--%>
-<%--        <div class="question-block">--%>
-<%--            <h4>${status.index + 1}. ${answer.askedQuestion}</h4>--%>
-<%--            <p>--%>
-<%--                <strong><fmt:message key="details.your_answer"/>:</strong>--%>
-<%--                <span class="${answer.correct ? 'text-success' : 'text-danger'}">--%>
-<%--                        ${answer.selectedAnswer}--%>
-<%--                </span>--%>
-<%--            </p>--%>
-<%--            <c:if test="${!answer.correct}">--%>
-<%--                <p class="text-muted">--%>
-<%--                    <fmt:message key="details.correct_answer_hint"/>--%>
-<%--                </p>--%>
-<%--            </c:if>--%>
-<%--        </div>--%>
-<%--        <br/> <!-- Пустая строка между вопросами -->--%>
-<%--    </c:forEach>--%>
+                    <c:if test="${not answer.correct and not empty answer.correctAnswer}">
+                        <p>
+                            <strong><fmt:message key="details.correct_answer"/>:</strong>
+                            <span class="text-success">${answer.correctAnswer}</span>
+                        </p>
+                    </c:if>
+                </div>
+            </div>
+        </c:forEach>
+    </div>
 
-    <p class="centered">
+    <div class="actions centered">
         <a href="${pageContext.request.contextPath}/secure/history" class="btn btn-secondary">
             <fmt:message key="button.back_to_history"/>
         </a>
-    </p>
+        <a href="${pageContext.request.contextPath}/secure/tests" class="btn btn-primary">
+            <fmt:message key="button.back_to_history"/>
+        </a>
+    </div>
 </div>

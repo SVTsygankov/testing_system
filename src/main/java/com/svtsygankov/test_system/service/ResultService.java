@@ -9,6 +9,7 @@ import com.svtsygankov.test_system.entity.Test;
 
 import java.time.LocalDateTime;
 
+import java.time.ZoneId;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -121,6 +122,8 @@ public class ResultService {
         return resultDao.count();
     }
 
+    // service/ResultService.java (метод toDto)
+
     /**
      * Преобразует сущность Result в DTO.
      *
@@ -132,6 +135,12 @@ public class ResultService {
             return null;
         }
 
+        // 1. Преобразуем LocalDateTime в Date для JSP
+        java.util.Date dateAsDate = java.util.Date.from(
+                result.getDate().atZone(ZoneId.systemDefault()).toInstant()
+        );
+
+        // 2. Преобразуем UserAnswer сущности в UserAnswerDto
         List<ResultDto.UserAnswerDto> answerDtos = result.getAnswers().stream()
                 .map(answer -> ResultDto.UserAnswerDto.builder()
                         .id(answer.getId())
@@ -142,16 +151,18 @@ public class ResultService {
                         .build())
                 .collect(Collectors.toList());
 
+        // 3. Считаем правильные ответы
         int correctCount = (int) result.getAnswers().stream()
                 .filter(UserAnswer::isCorrect)
                 .count();
 
+        // 4. Создаём и возвращаем DTO
         return ResultDto.builder()
                 .id(result.getId())
                 .userId(result.getUser().getId())
                 .testId(result.getTest().getId())
-                .testTitle(result.getTest().getTitle()) // Удобно для отображения
-                .date(result.getDate())
+                .testTitle(result.getTest().getTitle())
+                .date(dateAsDate) // ← Передаём java.util.Date
                 .answers(answerDtos)
                 .correctCount(correctCount)
                 .totalCount(result.getAnswers().size())

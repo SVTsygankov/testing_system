@@ -1,6 +1,6 @@
 package com.svtsygankov.test_system.dto;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 import lombok.AllArgsConstructor;
@@ -17,7 +17,7 @@ public class ResultDto {
     private Long userId;
     private Integer testId;
     private String testTitle; // Для удобства отображения
-    private LocalDateTime date;
+    private Date date;
     private List<UserAnswerDto> answers;
     private int correctCount;
     private int totalCount;

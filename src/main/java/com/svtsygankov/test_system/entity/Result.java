@@ -25,7 +25,7 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString(exclude = {"answers"})
+//@ToString(exclude = {"answers"})
 @Entity
 @Table(name = "test_results")
 public class Result {
@@ -78,5 +78,16 @@ public class Result {
     @Override
     public int hashCode() {
         return getClass().hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "Result{" +
+                "id=" + id +
+                ", userId=" + (user != null ? user.getId() : null) +
+                ", testId=" + (test != null ? test.getId() : null) +
+                ", date=" + date +
+                ", answersCount=" + answers.size() +
+                '}';
     }
 }
