@@ -58,9 +58,7 @@ public class SubmitTestServlet extends BaseUserServlet {
 
             req.getSession().removeAttribute("currentTestId");
 
-            // 8. Передаем DTO в JSP
             req.setAttribute("result", resultDto);
-            // УБРАЛИ resultDateAsDate - он уже в resultDto.date
             req.setAttribute("contentPage", "/WEB-INF/views/secure/test-result-content.jsp");
             req.getRequestDispatcher("/WEB-INF/views/layout.jsp").forward(req, resp);
 

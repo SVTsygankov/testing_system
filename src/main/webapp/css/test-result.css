@@ -6,6 +6,20 @@
     background: white;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    border-left: 6px solid #6c757d; /* Серый по умолчанию */
+}
+
+/* Цветовая индикация по результату */
+.test-result-container.result-failed {
+    border-left-color: #dc3545; /* Красный */
+}
+
+.test-result-container.result-warning {
+    border-left-color: #ffc107; /* Жёлтый */
+}
+
+.test-result-container.result-success {
+    border-left-color: #28a745; /* Зелёный */
 }
 
 .test-result-container .page-title {
@@ -38,6 +52,20 @@
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
+/* Цветовая индикация в score-summary */
+.score-summary.failed {
+    background: linear-gradient(135deg, #dc3545 0%, #bd2130 100%);
+}
+
+.score-summary.warning {
+    background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+    color: #212529;
+}
+
+.score-summary.success {
+    background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+}
+
 .score-number {
     font-size: 3em;
     font-weight: bold;
@@ -46,6 +74,12 @@
 
 .score-label {
     font-size: 1.2em;
+}
+
+.percentage-display {
+    font-size: 1.5em;
+    font-weight: bold;
+    margin-top: 10px;
 }
 
 .answers-list {
@@ -58,6 +92,7 @@
     border-radius: 8px;
     border-left: 4px solid #ddd;
     transition: box-shadow 0.2s;
+    background: #ffffff;
 }
 
 .answer-item:hover {
